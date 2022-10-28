@@ -4,7 +4,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-
 typedef struct {
   char* buffer;
   size_t buffer_length;
@@ -29,7 +28,6 @@ typedef enum {
 typedef struct {
   StatementType type;
 } Statement;
-
 
 InputBuffer* new_input_buffer() {
   InputBuffer* input_buffer = malloc(sizeof(input_buffer)); 
@@ -64,6 +62,7 @@ void close_input_buffer(InputBuffer* input_buffer) {
 MetaCommandResult do_meta_command(InputBuffer* input_buffer) {
   if (strcmp(input_buffer->buffer, ".exit") == 0) {
     close_input_buffer(input_buffer);
+    exit(EXIT_SUCCESS);
   } else {
     return META_COMMAND_UNRECOGNIZED_COMMAND;
   }

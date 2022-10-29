@@ -123,6 +123,7 @@ const u_int32_t PAGE_SIZE = 4096;
 const u_int32_t ROWS_PER_PAGE = PAGE_SIZE / ROW_SIZE; 
 const u_int32_t TABLE_MAX_ROWS = ROWS_PER_PAGE * TABLE_MAX_PAGES;
 
+//put values to the row
 void serialize_row(Row* source, void* destination) {
   memcpy(destination + ID_OFFSET, &(source->id), ID_SIZE);
   memcpy(destination + USERNAME_OFFEST, &(source->username), USERNAME_SIZE);
@@ -141,12 +142,14 @@ typedef struct {
 } Table;
 
 void* row_slot(Table* table, u_int32_t row_num) {
-  u_int32_t page_num = row_num / ROWS_PER_PAGE;
-  void* page = table->pages[page_num];
+  u_int32_t page_num = row_num / ROWS_PER_PAGE; // get number of the page
+  void* page = table->pages[page_num]; // according to the number find location with ptr
   if (page == NULL) {
     // Allocate memory only when we try to access page
-    page = table->pages[page_num] = malloc(PAGE_SIZE);
+    page = table->pages[page_num] = malloc(PAGE_SIZE); //if page does not exist allocate memory
   }
+
+  //some stuff so rows do not cross
   u_int32_t row_offset = row_num % ROWS_PER_PAGE;
   u_int32_t byte_offset = row_offset * ROW_SIZE;
   return page + byte_offset;
@@ -154,12 +157,12 @@ void* row_slot(Table* table, u_int32_t row_num) {
 
 ExecuteResult execute_insert(Statement* statement, Table* table) {
   if (table->num_rows >= TABLE_MAX_ROWS) {
+    printf("to many pages, please delete something\n");
     return EXECUTE_TABLE_FULL;
   }
 
-  Row* row_to_insert = &(statement->row_to_insert);
-
-  serialize_row(row_to_insert, row_slot(table, table->num_rows));
+  Row* row_to_insert = &(statement->row_to_insert); // our data that we read from the user
+  serialize_row(row_to_insert, row_slot(table, table->num_rows)); //where to put row
   table->num_rows += 1;
 
   return EXECUTE_SUCCESS;
@@ -184,9 +187,9 @@ ExecuteResult execute_statement(Statement* statement, Table* table) {
 }
 
 Table* new_table() {
-  Table* table = (Table*)malloc(sizeof(Table));
+  Table* table = malloc(sizeof(Table));
   table->num_rows = 0;
-  for (uint32_t i = 0; i < TABLE_MAX_PAGES; i++) {
+  for (u_int32_t i = 0; i < TABLE_MAX_PAGES; i++) {
      table->pages[i] = NULL;
   }
   return table;
